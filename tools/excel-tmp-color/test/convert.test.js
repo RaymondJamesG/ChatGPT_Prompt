@@ -233,6 +233,8 @@ test('convert workbook colors into TextMeshPro tags', async () => {
 
   const withBlack = await TmpExcel.convertArrayBuffer(finalBuffer, { includeBlack: true });
   assert.equal(find(withBlack, '文案', 'A2').tagged, '<color=#000000>普通说明</color>');
+  assert.equal(find(withBlack, '文案', 'A15'), undefined);
+  assert.equal(find(withBlack, '文案', 'A23'), undefined);
 
   const checkBook = new globalThis.ExcelJS.Workbook();
   await checkBook.xlsx.load(finalBuffer);

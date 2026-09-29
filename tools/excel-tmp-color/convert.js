@@ -228,9 +228,10 @@
     var tint = color.tint ? Number(color.tint) : 0;
     var hasArgb = !!color.argb;
 
-    // Theme 1 is Text 1 / dk1, Excel's default font color, even when a style
-    // such as a number format materializes it onto the cell.
-    if (!options.includeBlack && themeIndex === 1 && !tint && indexed == null && !hasArgb) {
+    // Theme 1 is Text 1 / dk1, Excel's default font color. A fill or number
+    // format can materialize that default onto the cell, so it is not an
+    // explicit color even when "include black" is on.
+    if (themeIndex === 1 && !tint && indexed == null && !hasArgb) {
       return null;
     }
 
