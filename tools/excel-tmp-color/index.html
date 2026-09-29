@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Excel 颜色文本 → TextMeshPro</title>
+  <style>
+    :root {
+      --bg: #efe6d8;
+      --bg-2: #f7f1e7;
+      --ink: #241c16;
+      --muted: #6f6256;
+      --line: #e0d2c0;
+      --card: #fffaf3;
+      --accent: #be3d22;
+      --accent-dark: #8d2b16;
+      --ok: #1d6b45;
+      --shadow: 0 18px 50px rgba(70, 42, 18, 0.08);
+      --sans: "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      --serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Songti SC", "STSong", "Noto Serif SC", serif;
+      --mono: "Sarasa Mono SC", "Cascadia Mono", "Source Han Mono", "IBM Plex Mono", ui-monospace, monospace;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    body {
+      min-height: 100vh;
+      color: var(--ink);
+      font-family: var(--sans);
+      background:
+        radial-gradient(900px 420px at 0% -10%, rgba(190, 61, 34, 0.14), transparent 55%),
+        radial-gradient(700px 380px at 100% 0%, rgba(36, 92, 74, 0.1), transparent 50%),
+        var(--bg);
+    }
+
+    button, input { font: inherit; color: inherit; }
+    button { cursor: pointer; }
+    button:focus-visible, input:focus-visible, label.drop:focus-within {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    .wrap {
+      width: min(1120px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 36px 0 72px;
+    }
+
+    .eyebrow {
+      margin: 0 0 8px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      font-size: 12px;
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    h1 {
+      margin: 0;
+      font-family: var(--serif);
+      font-size: clamp(32px, 4vw, 48px);
+      font-weight: 650;
+      letter-spacing: -0.03em;
+      line-height: 1.15;
+    }
+
+    .lede {
+      max-width: 720px;
+      margin: 14px 0 0;
+      color: var(--muted);
+      font-size: 16px;
+      line-height: 1.65;
+    }
+
+    code, .mono { font-family: var(--mono); }
+    .lede code, .rules code {
+      font-size: 0.92em;
+      background: rgba(190, 61, 34, 0.08);
+      padding: 0 0.3em;
+      border-radius: 4px;
+    }
+
+    .rules {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin: 22px 0 0;
+      padding: 0;
+      list-style: none;
+    }
+    .rules li {
+      background: rgba(255, 250, 243, 0.72);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 12px 12px 11px;
+    }
+    .rules b { display: block; margin-bottom: 4px; font-size: 14px; }
+    .rules span { display: block; color: var(--muted); font-size: 13px; line-height: 1.45; }
+
+    .panel {
+      margin-top: 22px;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+    }
+
+    .drop {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-height: 188px;
+      margin: 18px;
+      border: 1.5px dashed #c9b6a2;
+      border-radius: 14px;
+      background: linear-gradient(180deg, rgba(255, 250, 243, 0.4), rgba(243, 232, 216, 0.55));
+      text-align: center;
+      transition: border-color 0.15s ease, background 0.15s ease, transform 0.15s ease;
+    }
+    .drop.is-over {
+      border-color: var(--accent);
+      background: rgba(190, 61, 34, 0.06);
+      transform: translateY(-1px);
+    }
+    .drop strong { font-size: 18px; }
+    .drop p { margin: 0; color: var(--muted); font-size: 14px; }
+    .drop-actions { display: flex; gap: 8px; margin-top: 6px; }
+
+    .btn, .ghost, .file-btn {
+      border-radius: 999px;
+      border: 1px solid transparent;
+      padding: 8px 14px;
+      background: var(--accent);
+      color: white;
+      line-height: 1.2;
+    }
+    .btn:hover { background: var(--accent-dark); }
+    .btn:disabled, .ghost:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+    .ghost, .file-btn {
+      background: transparent;
+      color: var(--ink);
+      border-color: #d9c8b6;
+    }
+    .ghost:hover, .file-btn:hover { background: rgba(36, 28, 22, 0.04); }
+    .file-btn { position: relative; overflow: hidden; }
+    .file-btn input {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+    }
+
+    .options {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px 22px;
+      align-items: center;
+      padding: 0 18px 18px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+    .options label { display: flex; gap: 8px; align-items: center; }
+    .options input { accent-color: var(--accent); width: 16px; height: 16px; }
+    .local-note { margin-left: auto; }
+
+    .status {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px 18px;
+      align-items: flex-end;
+      justify-content: space-between;
+      padding: 16px 18px 0;
+    }
+    .status h2 { margin: 0; font-size: 18px; }
+    .status p { margin: 4px 0 0; color: var(--muted); font-size: 14px; }
+    .actions { display: flex; flex-wrap: wrap; gap: 8px; }
+
+    .warn {
+      margin: 12px 18px 0;
+      padding: 10px 12px;
+      border-radius: 10px;
+      background: #fff4df;
+      color: #7a4b12;
+      font-size: 13px;
+    }
+    .error {
+      margin: 0 18px 18px;
+      padding: 12px 14px;
+      border-radius: 10px;
+      background: #fde8e2;
+      color: var(--accent-dark);
+    }
+
+    .toolbar {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      padding: 14px 18px 0;
+      flex-wrap: wrap;
+    }
+    .tabs { display: flex; gap: 6px; flex-wrap: wrap; flex: 1; }
+    .tab {
+      border: 1px solid var(--line);
+      background: transparent;
+      border-radius: 999px;
+      padding: 6px 10px;
+      color: var(--muted);
+    }
+    .tab[aria-pressed="true"] {
+      background: var(--ink);
+      border-color: var(--ink);
+      color: #fffaf3;
+    }
+    .search {
+      width: min(280px, 100%);
+      border: 1px solid var(--line);
+      background: #fff;
+      border-radius: 999px;
+      padding: 8px 12px;
+    }
+
+    .table-wrap { margin: 14px 18px 18px; overflow: auto; border: 1px solid var(--line); border-radius: 12px; }
+    table { width: 100%; border-collapse: collapse; min-width: 760px; }
+    th, td { text-align: left; vertical-align: top; padding: 10px 12px; border-bottom: 1px solid var(--line); font-size: 14px; }
+    th { position: sticky; top: 0; background: #f6eee4; font-size: 12px; letter-spacing: 0.04em; color: var(--muted); }
+    tr:last-child td { border-bottom: 0; }
+    tr:hover td { background: #fff7ee; }
+    .addr { font-family: var(--mono); white-space: nowrap; color: var(--muted); }
+    .sheet-name { font-weight: 650; }
+    .hidden-flag { display: inline-block; margin-left: 6px; font-size: 11px; color: var(--muted); }
+    .swatches { display: flex; flex-direction: column; gap: 4px; }
+    .swatch { display: flex; align-items: center; gap: 6px; font-family: var(--mono); font-size: 12px; }
+    .dot {
+      width: 12px; height: 12px; border-radius: 50%;
+      border: 1px solid rgba(36, 28, 22, 0.2);
+      flex: 0 0 auto;
+    }
+    .raw {
+      font-family: var(--mono);
+      font-size: 12.5px;
+      line-height: 1.55;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+    .preview { margin-top: 6px; line-height: 1.5; }
+    .cell-actions { margin-top: 8px; }
+    .mini {
+      border: 0;
+      background: transparent;
+      color: var(--accent);
+      padding: 0;
+      font-size: 13px;
+    }
+    .mini:hover { text-decoration: underline; }
+
+    .empty, .loading {
+      margin: 8px 18px 20px;
+      padding: 28px 16px;
+      text-align: center;
+      color: var(--muted);
+    }
+    .more-row { text-align: center; }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 22px;
+      transform: translateX(-50%) translateY(12px);
+      background: var(--ink);
+      color: #fffaf3;
+      border-radius: 999px;
+      padding: 10px 16px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease, transform 0.2s ease;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    @media (max-width: 860px) {
+      .rules { grid-template-columns: 1fr 1fr; }
+      .local-note { margin-left: 0; }
+      .wrap { width: min(1120px, calc(100% - 20px)); padding-top: 22px; }
+      .table-wrap { overflow: visible; border: 0; }
+      table { min-width: 0; }
+      thead { display: none; }
+      tr {
+        display: block;
+        margin-bottom: 10px;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: #fffdf9;
+      }
+      td { display: block; border-bottom: 0; padding: 8px 12px; }
+      td:first-child { padding-top: 12px; }
+      td:last-child { padding-bottom: 12px; }
+    }
+    @media (max-width: 560px) {
+      .rules { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <p class="eyebrow">Unity TextMeshPro · 本地工具</p>
+    <h1>把 Excel 里的彩色文字换成颜色标签</h1>
+    <p class="lede">拖入或选择本地表格。单元格里带了字体颜色的文字会写成 <code>&lt;color=#RRGGBB&gt;文字&lt;/color&gt;</code>。这段文字如果已经有 color 标签，就只更新标签里的颜色值，不再套一层。</p>
+    <ul class="rules">
+      <li><b>整格上色</b><span>整段文字包进一个 color 标签。</span></li>
+      <li><b>只上一截</b><span>同一个格子里只有一部分变色时，只标记那一段。</span></li>
+      <li><b>已有标签</b><span>保留 <code>&lt;b&gt;</code> 等其他标签，只改 color 的颜色值。</span></li>
+      <li><b>纯黑默认跳过</b><span>黑色和 Excel 默认文字色不加标签。背景色、条件格式不处理。</span></li>
+    </ul>
+
+    <section class="panel" aria-label="转换工具">
+      <label class="drop" id="drop">
+        <strong>拖入 .xlsx / .xlsm</strong>
+        <p>文件只在这台浏览器里处理，不会上传</p>
+        <div class="drop-actions">
+          <span class="file-btn">选择表格<input id="file" type="file" accept=".xlsx,.xlsm,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel.sheet.macroEnabled.12" /></span>
+          <button class="ghost" id="sample" type="button">用示例看效果</button>
+        </div>
+      </label>
+      <div class="options">
+        <label><input id="includeBlack" type="checkbox" />包含纯黑文字</label>
+        <label><input id="keepAlpha" type="checkbox" checked />保留透明度，写成 <span class="mono">#RRGGBBAA</span></label>
+        <span class="local-note">直接打开这个 HTML 就能用</span>
+      </div>
+      <div id="error" class="error" hidden></div>
+      <div id="loading" class="loading" hidden>正在读取表格…</div>
+      <div id="results" hidden>
+        <div class="status">
+          <div>
+            <h2 id="fileName">表格</h2>
+            <p id="summary"></p>
+          </div>
+          <div class="actions">
+            <button class="btn" id="copyAll" type="button">复制全部结果</button>
+            <button class="ghost" id="downloadXlsx" type="button">下载替换后的 Excel</button>
+            <button class="ghost" id="downloadCsv" type="button">下载对照 CSV</button>
+          </div>
+        </div>
+        <div id="warn" class="warn" hidden></div>
+        <div class="toolbar">
+          <div class="tabs" id="tabs" role="tablist"></div>
+          <input class="search" id="search" type="search" placeholder="搜索单元格、原文或标签" />
+        </div>
+        <div id="empty" class="empty" hidden>没有需要加标签的彩色文字。纯黑、默认文字色和单元格底色不会被转换。</div>
+        <div class="table-wrap" id="tableWrap">
+          <table>
+            <thead>
+              <tr>
+                <th>位置</th>
+                <th>颜色</th>
+                <th>原文</th>
+                <th>TextMeshPro</th>
+              </tr>
+            </thead>
+            <tbody id="rows"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </main>
+  <div class="toast" id="toast" role="status"></div>
+  <script src="vendor/jszip.min.js"></script>
+  <script src="vendor/exceljs.min.js"></script>
+  <script src="convert.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
